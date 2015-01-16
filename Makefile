@@ -1,5 +1,5 @@
 
-.PHONY: all clean pull
+.PHONY: all clean
 
 %.html: %.md
 	Rscript -e "require(knitr); require(markdown); markdownToHTML('$<', '$@', options=c('use_xhtml', 'base64_images'));"
