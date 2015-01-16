@@ -1,0 +1,152 @@
+## Basics:
+
+plyr and dplyr don't "add" behaviour to data frames, so we still use them (mostly):
+
+```{r}
+myDT <- data.frame(
+    number=1:3,
+    letter=c('a','b','c')
+  ) # like data.frame constructor
+myDT
+````
+
+We still rely on basics for reading data from CSVs and the like. Dplyr provides a `tbl_df` class, which, like data table, won't spam your terminal.
+
+```{r}
+library(dplyr)
+D <- read.csv("TB_Burden_Data.csv")
+D <- tbl_df(D)
+````
+
+## Pipes:
+
+Dplyr's interface relies heavily on constructing "pipelines" of operations. Unlike plyr and data.table, these are *separate* function calls.
+
+
+```{r}
+D %>% 
+	filter(country == 'Afghanistan') %>% 
+	summarise(mean(e_prev_100k))
+```
+
+Selecting columns:
+```{r}
+D %>% select(e_prev_100k,e_prev_100k_lo,e_prev_100k_hi)
+```
+
+Summarisation with multiple columns:
+
+```{r}
+D %>% 
+	filter(country == 'Afghanistan') %>% 
+	summarise(
+		mid=mean(e_prev_100k),
+       		lo=mean(e_prev_100k_lo),
+       	 	hi=mean(e_prev_100k_hi)
+	)
+```
+
+
+```{r}
+D %>%
+	group_by(country) %>%
+	summarise(mid=mean(e_prev_100k))
+```
+
+Pete's more complicated example:
+
+```{r}
+
+D %>% 
+	group_by(country, year > 2000) %>%
+	summarise( 
+		lo=mean(e_prev_100k_lo),
+       		hi=mean(e_prev_100k_hi))
+```
+
+Sorting is straight forward. The pipe isn't specific to dplyr functions, so you can use it to stuff results into functions.
+
+```{r}
+D %>% 
+	arrange(e_prev_100k) %>% 
+	mutate(id=row_number()) %>%
+	select(id, e_prev_100k) %>% plot
+```
+
+Pipes aren't magic, they simply flip the argument and the function around.
+```{r}
+plot(D %>% 
+	arrange(e_prev_100k) %>% 
+	mutate(id=row_number()) %>%
+	select(id, e_prev_100k))
+```
+
+Adding new columns uses mutate:
+```{r}
+D %>% mutate(country_t = paste0(country,year)) %>% select(country_t)
+```
+
+## Databases
+
+Up to now, most of the advantages arise from using pipes and primitives that exist in base R or plyr. The real advantage of dplyr arises when you need to use a database.
+
+For example, suppose we have a big data frame:
+
+```{r}
+data <- tbl_df(data.frame(x=1:200, y=runif(4), z=runif(50)))
+# You need to set this env var to make the huge data set.
+if(Sys.getenv("USE_LOADS_OF_MEMORY") == "yes"){
+	data <- data.frame(x=1:200000000, y=runif(4), z=runif(50))
+	format(object.size(data), units="GB")
+}
+
+db <- src_sqlite("data.sqlite", create=T)
+copy_to(db, data, temporary=F)
+
+```
+
+Aggregations over large data frames often get wedged when memory runs out. dplyr makes it easy to shift computation to a database without changing anything (most of the time).
+
+Loading data is straightforward. dplyr works with a bunch of databases out of the box, including SQLite (a simple, server-free database). Loading data is straight forward:
+
+```{r}
+src <- src_sqlite("data.sqlite")
+data <- tbl(src, "data")
+data
+```
+We can perform computation on the data as if it were a local data frame. dplyr will try to map functions to SQL commands, which is far faster. Using a database means larger-than-memory datasets can be used without much more effort.
+
+```{r, cache=T}
+data %>% summarise(mean(x), max(y), mean(z))
+```
+
+When SQL is used, dplyr won't evaluate operations as they're given. It builds up the full pipeline then renders it to SQL when it's needed.
+
+```{r, cache=T}
+	unevaluated <- data %>% summarise(mean(x), max(y), mean(z))
+```
+
+This appears to run quickly, because all dplyr's doing is remembering the query. If computation doesn't need to go into R, like this example, `dplyr` can automatically create a temporary table with the results using the `compute` command:
+
+```{r,cache=T}
+	unevaluated %>% compute()
+```
+
+### Gotchas
+
+When using SQL data frames, built-in R commands aren't available. If dplyr can't map an expression to SQL, you'll get a weird error. You can see what dplyr is sending by using `translate_sql`:
+
+```{r}
+translate_sql(exp(-x - 5))
+```
+In cases where the database can't do what you need, you'll often have to get the data back into R to process it. You manually do this by using `collect` on your data:
+
+```{r}
+	D %>% collect()
+```
+
+This brings the whole table in as a data frame. From there you can use the full suite of R functions on it.
+
+The `copy_to` function makes it straight-forward to put data back into the database. If you do have to pull stuff into R to process it, you can use `copy_to` to immediately push it back, and operate on the stored table instead.
+
+Unlike plyr, dplyr provides a much higher level of abstraction, which means some things that are easy in plyr don't quite fit into its workflow.  For example, there's no (easy) way of applying a function to rows in a data frame that returns more than one value, or doesn't return anything (for example, plotting).

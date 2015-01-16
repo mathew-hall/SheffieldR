@@ -1,0 +1,91 @@
+## Basics:
+
+plyr and dplyr don't "add" behaviour to data frames, so we still use them (mostly):
+
+```{r}
+myDT <- data.frame(
+    number=1:3,
+    letter=c('a','b','c')
+  ) # like data.frame constructor
+myDT
+````
+
+We still rely on basics for reading data from CSVs and the like:
+
+```{r}
+D <- read.csv("TB_Burden_Data.csv")
+head(names(D))
+````
+
+##plyr is bare-bones:
+
+It doesn't give us the nice extraction syntax data.table provides, so there's still some repetition:
+
+```{r}
+mean(D[D$country=='Afghanistan','e_prev_100k'])
+```
+However, we can improve on that slightly using `with`:
+
+```{r}
+with(D, mean(e_prev_100k[country=='Afghanistan']))
+```
+
+We extract multiple columns with base R:
+```{r}
+head(D[,c('e_prev_100k','e_prev_100k_lo',
+    'e_prev_100k_hi')])
+```
+
+Summarisation is similar to data.table, however there's no need to use `list` on the new columns, and we specify the group before the application.
+
+```{r}
+library(plyr)
+E <- D[with(D, country=='Afghanistan'),] 
+ddply(E, .(), summarise, mid=mean(e_prev_100k),
+       lo=mean(e_prev_100k_lo),
+       hi=mean(e_prev_100k_hi) )
+```
+
+`plyr` functions expect groupings, which is why the `.()` is needed. plyr is designed for the split-apply-combine pipeline.
+
+Means for each country; take `D`, group by `country`, calculating mid. Summarise tells plyr to use one value for each group, and throw away all the other columns.
+```{r}
+head(ddply(D, .(country), summarise, mid=mean(e_prev_100k)))
+```
+
+Pete's more complicated example:
+
+```{r}
+head(ddply(D, .(country, year > 2000), summarise, lo=mean(e_prev_100k_lo),
+       hi=mean(e_prev_100k_hi)))
+```
+
+Sorting is a little bit nicer than base R:
+
+```{r}
+plot(arrange(D, e_prev_100k)$e_prev_100k)
+```
+
+Adding new columns to a data frame:
+```{r}
+head(mutate(D, country_t = paste0(country,year)))
+```
+
+Most of the gotchas from data table don't exist:
+
+ * assignment copies by value
+ * column selection works as normal
+ 
+all of the gotchas of data frames persist, however.
+
+Bonus: read all CSV files matching "test*.csv" and produce one data frame back:
+```{r}
+ldply(list.files(pattern="test.*\\.csv"), read.csv)
+````
+Same again, but including filename:
+```{r}
+ldply(list.files(pattern="test.*\\.csv"), function(file){ df <- read.csv(file); df$name <- file; df})
+````
+This is where plyr can be very useful; `ply` commands can be nested, and you can write functions to apply and let R deal with combining the result. Easier than loops  using rbind, and usually faster.
+
+Plyr can parallelise by setting `.parallel` to `TRUE`, and can show progress bars for long-running operations.
