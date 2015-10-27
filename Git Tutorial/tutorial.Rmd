@@ -161,3 +161,42 @@ Once RStudio has checked the project out, it will automatically generate a proje
 ![21 Files](screenshots/21_files.png)
 
 Make some changes to the README.md file and commit them using the Git panel, going through the same steps as before.
+
+## Add a New R File (Optional)
+
+If you wish, you can also add a new file and write some R code. Don't forget to add it to Git and save the changes.
+
+## Pushing Your Changes
+
+You're now ready to push your changes to your forked copy of the repository. First, open the History window from the Git panel.
+
+![23 Push](screenshots/23_push.png)
+
+The overview shows that your copy of the repository is ahead of the "origin" - you've made changes that aren't saved remotely yet. Close the Review Changes window and then click the Push button in the Git panel.
+
+After some time, your changes are now available remotely on your fork. You can verify your push worked by checking the History in RStudio.
+
+![24 History](screenshots/24_history.png)
+
+The "origin" and local histories are the same; the remote branch has "caught up" to your changes.
+
+## Making a Pull Request
+
+Go to your repository on GitHub. You should see your changes to the `README.md` file in the project overview.
+
+![25 Github Project](screenshots/25_github_project.png)
+
+Click the "Pull Requests" link on the right hand side of the project.
+
+![26 Pull Requests](screenshots/26_pull_requests.png)
+
+Click the "New Pull Request" button to create a pull request for your changes.
+
+![27 Create Pull Request](screenshots/27_create_pull_request.png)
+
+You'll see all the differences that you're proposing the maintainer integrates with the repository. Make sure you haven't accidentally included any superfluous files. If you're happy with the changes, click the "Make Pull Request" button.
+
+![28 Add Description](screenshots/28_add_description.png)
+
+You can now add a title and description that motivates your suggested changes.
+

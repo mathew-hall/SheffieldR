@@ -112,10 +112,91 @@ It's possible to copy a repository from one location to another, and all the cha
 
 To start working with an existing repository, you can clone it. This takes a complete copy of the remote repository, allowing you to go back in its history as you can with other repositories. The clone operation also remembers where the repository came from. If the remote repository changes, you can then pull changes back into your own copy.
 
+## Pushing to a Repository
+
+If you have permission, you can push any changes made to your local repository back to the remote. The tutorial will cover the basic process of making changes and publishing them.
+
 ## GitHub and BitBucket
 
 GitHub provides a free service that allows you to host a repository and share it with the public (private access is available for a fee). BitBucket provides a similar service. These services serve your central copy, which other collaborators can clone, make changes to, then push commits to.
 
-## Cloning a GitHub Project
+# Cloning a GitHub Project
 
-For this exercise, we've set up a GitHub repository at [https://github.com/SheffieldR/git-workshop](https://github.com/SheffieldR/git-workshop)
+For this exercise, we've set up a GitHub repository at [https://github.com/SheffieldR/git-workshop](https://github.com/SheffieldR/git-workshop). In this exercise, you'll use GitHub to "fork" the repository, add your name to the README.md file and submit a pull request. This is the normal flow for collaboration with 
+
+## Getting a GitHub Account
+
+To use GitHub, you'll need an account. You can sign up for one at [https://github.com/join](https://github.com/join). Once you have an account you can create repositories.
+
+## Forking the Repository
+
+When you want to contribute to a repository, you won't normally be allowed to send changes straight to it. Instead, you have to take a copy of the repository and make changes on the copy. Then, you ask the maintainer of the original repository to adopt your changes. This process is called "forking" because you're creating a fork in the project's timeline. The maintainer will then "merge" the two timelines back into one.
+
+![15 Fork Button](screenshots/15_fork_button.png)
+
+To fork our repository, visit [https://github.com/SheffieldR/git-workshop](https://github.com/SheffieldR/git-workshop) and click the "Fork" button. This will create a copy of the repository in your account. The repository will be recorded as a fork, linking to the original repository.
+
+![16 Fork](screenshots/16_fork.png)
+
+## Cloning the Repository with RStudio
+
+To get started, create a new project in RStudio. This time, choose the "Version Control" option, then select the Git option.
+
+![17 New Project](screenshots/17_new_project.png)
+
+![18 Source Control](screenshots/18_source_control.png)
+
+On your GitHub project fork, copy the "Clone URL" and paste it into the Git repository URL in the RStudio Git window.
+
+![19 Git Clone Url](screenshots/19_git_clone_url.png)
+
+![20 Git Repo](screenshots/20_git_repo.png)
+
+Click the Create Project button to check out the remote copy.
+
+## Making changes
+
+Once RStudio has checked the project out, it will automatically generate a project file and `.gitignore` file. These files can be ignored for the exercise. Open the `README.md` file from the Files panel.
+
+![21 Files](screenshots/21_files.png)
+
+Make some changes to the README.md file and commit them using the Git panel, going through the same steps as before.
+
+## Add a New R File (Optional)
+
+If you wish, you can also add a new file and write some R code. Don't forget to add it to Git and save the changes.
+
+## Pushing Your Changes
+
+You're now ready to push your changes to your forked copy of the repository. First, open the History window from the Git panel.
+
+![23 Push](screenshots/23_push.png)
+
+The overview shows that your copy of the repository is ahead of the "origin" - you've made changes that aren't saved remotely yet. Close the Review Changes window and then click the Push button in the Git panel.
+
+After some time, your changes are now available remotely on your fork. You can verify your push worked by checking the History in RStudio.
+
+![24 History](screenshots/24_history.png)
+
+The "origin" and local histories are the same; the remote branch has "caught up" to your changes.
+
+## Making a Pull Request
+
+Go to your repository on GitHub. You should see your changes to the `README.md` file in the project overview.
+
+![25 Github Project](screenshots/25_github_project.png)
+
+Click the "Pull Requests" link on the right hand side of the project.
+
+![26 Pull Requests](screenshots/26_pull_requests.png)
+
+Click the "New Pull Request" button to create a pull request for your changes.
+
+![27 Create Pull Request](screenshots/27_create_pull_request.png)
+
+You'll see all the differences that you're proposing the maintainer integrates with the repository. Make sure you haven't accidentally included any superfluous files. If you're happy with the changes, click the "Make Pull Request" button.
+
+![28 Add Description](screenshots/28_add_description.png)
+
+You can now add a title and description that motivates your suggested changes.
+
