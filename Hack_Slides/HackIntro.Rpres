@@ -1,0 +1,195 @@
+NBN Data Overview
+========================================================
+author: Mathew Hall
+date: 23 Feb 2016
+width: 1280
+height: 1024
+
+Accessing NBN Data from R in a Nutshell
+========================================================
+
+### There's a package for that!
+
+```{r, results='hide', cache=T}
+install.packages("rnbn")
+library("rnbn")
+```
+```{r, echo=F, results='hide', include=F}
+library(rnbn)
+```
+
+### Sign up for a free NBN account
+
+```{r}
+NBN_USER <- 'my username'
+NBN_PASSWORD <- 'super secret!'
+```
+
+```{r, echo="f", results='hide',include=FALSE}
+source("creds.R")
+```
+
+### Login
+
+```{r}
+nbnLogin(NBN_USER,NBN_PASSWORD)
+```
+
+*You're good to go*!
+
+Finding Species
+========================================================
+
+Species are identified by a Taxon Version Key, a unique name
+for a (probably not) unique animal name. 
+
+*Q: What's this?*
+
+![badger](1024px-Badger-badger.jpg)
+
+Ceci n'est pas un blaireau
+========================================================
+
+![badger](1024px-Badger-badger.jpg)
+```{r, results='hide',cache=T,include=F}
+badger_result <- getTVKQuery(query="badger", top=T)
+badger_result
+badgerTVK <- badger_result$ptaxonVersionKey
+```
+~~Badger~~ `r badgerTVK`
+
+Answer
+========================================================
+
+```{r,cache=T}
+badger_result <- getTVKQuery(query="badger", top=T)
+badger_result
+badgerTVK <- badger_result$ptaxonVersionKey
+```
+
+
+
+
+What's the first recorded badger instance?
+========================================================
+
+```{r, cache=T}
+occ <- getOccurrences(badgerTVK)
+nrow(occ)
+```
+
+```{r}
+occ[1,c('datasetKey','startDate','endDate','latitude','longitude')]
+```
+
+Occurrence Information
+========================================================
+A data set might contain results from multiple surveys. The
+survey is also tagged on the occurrence record too.
+
+```{r}
+names(occ)
+```
+
+Where are they?
+========================================================
+
+The NBN data set contains observations of TVKs that are 
+geotagged and datestamped. We know (roughly) where and
+when the observation was recorded.
+
+```{r}
+occ[1:10,c('longitude','latitude')]
+```
+
+What's here?
+========================================================
+The NBN Gateway understands locations in two formats:
+
+ - grid references (e.g. `SK3588`) 
+ - Vice Counties (e.g. `63`)
+ 
+The `getOccurrences` function can be used to search within
+a location. For example: has a badger been spotted nearby?
+
+```{r,cache=T}
+occurrences <-getOccurrences(tvks=badgerTVK, gridRef='SK38', silent=T)
+nrow(occurrences)
+```
+
+Yes!
+
+Where?
+========================================================
+```{r}
+plot(occurrences$longitude, occurrences$latitude)
+```
+
+Make it fancy!
+========================================================
+```{r,cache=T,results='hide'}
+install.packages("ggmap")
+library(ggplot2)
+library(ggmap)
+```
+```{r, echo=F,results='hide',include=F}
+library(ggplot2)
+library(ggmap)
+```
+
+
+```{r}
+location <- with(occurrences, c(mean(longitude),mean(latitude)))
+map <- get_map(location, zoom=12, source="google")
+occurrences$year = with(occurrences, substr(startDate,0,4))
+ggmap(map) + 
+    geom_point(data=occurrences,
+              aes(x=longitude,y=latitude,colour=year)) #+
+    #geom_text(data=occurrences,aes(longitude,latitude,label=paste(startDate,endDate,sep='-')),angle=45,size=2,hjust=0,vjust=2)
+
+```
+
+What about Time?
+========================================================
+```{r}
+library(dplyr)
+```
+
+```{r}
+occurrences %>% 
+  mutate(startYear = as.numeric(substr(startDate,0,4))) %>%
+  group_by(startYear) %>%
+  summarise(counts = n()) %>%
+  ggplot() + geom_bar(aes(x=startYear,y=counts), stat="identity")
+
+```
+
+Getting an NBN Account
+========================================================
+
+### <https://data.nbn.org.uk/User/Register>
+
+![signup](signup.png)
+
+More Help
+========================================================
+
+### rnbn package vignette
+
+```{r eval=FALSE}
+vignette('rnbn_vignette')
+```
+
+Preparing for the first hack event
+========================================================
+
+ - Get a GitHub account (<github.com>)
+ - Register with the NBN (<https://data.nbn.org.uk/User/Register>)
+ - Install RStudio
+ - Get some ideas!
+ 
+Acknowledgements 
+========================================================
+
+ - Data shown provided by various organisations via the NBN Gateway
+ - Badger image is CC By Attribution Share Alike 3.0 Unported, copyright [BadgerHero](https://commons.wikimedia.org/wiki/File:Badger-badger.jpg)
